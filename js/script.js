@@ -29,7 +29,7 @@ async function loadAllData() {
             { id: "kesimpulan", title: "🎯 Kesimpulan" }
         ];
 
-        initApp();  // Mulai aplikasi setelah data siap
+        initApp();
     } catch (err) {
         console.error('Gagal memuat data JSON:', err);
         document.body.innerHTML = '<p style="padding:2rem; text-align:center;">Gagal memuat konten. Pastikan file JSON tersedia di folder assets/teks/</p>';
@@ -38,32 +38,73 @@ async function loadAllData() {
 
 // ======================== PARSER TAB DARI MARKDOWN TABEL ========================
 function parseMarkdownTableToTabWidget(tableText) {
-    const lines = tableText.trim().split('\n').filter(l => l.trim() !== '');
+    // Bersihkan spasi berlebih di awal/akhir
+    const trimmed = tableText.trim();
+    if (!trimmed) return '';
+    
+    // Pisahkan baris, buang baris kosong
+    const lines = trimmed.split(/\r?\n/).filter(l => l.trim() !== '');
     if (lines.length < 2) return '';
-    const headers = lines[0].split('|').map(h => h.trim()).filter(h => h !== '');
-    const rows = lines.slice(1).map(line => line.split('|').map(c => c.trim()).filter(c => c !== ''));
+    
+    // Fungsi untuk membagi baris dengan pipe (|), mempertahankan sel kosong
+    function splitRow(row) {
+        // Hilangkan pipe di awal dan akhir jika ada
+        let cleaned = row.trim();
+        if (cleaned.startsWith('|')) cleaned = cleaned.slice(1);
+        if (cleaned.endsWith('|')) cleaned = cleaned.slice(0, -1);
+        return cleaned.split('|').map(cell => cell.trim());
+    }
+    
+    const headers = splitRow(lines[0]);
     if (headers.length === 0) return '';
-
+    
+    // Baris kedua seringkali adalah pemisah (|---|---|), lewati jika ada
+    let dataStart = 1;
+    if (lines[1] && lines[1].includes('---')) dataStart = 2;
+    
+    const rows = [];
+    for (let i = dataStart; i < lines.length; i++) {
+        const cells = splitRow(lines[i]);
+        if (cells.length > 0) rows.push(cells);
+    }
+    
+    if (rows.length === 0) return '';
+    
+    // Bangun widget tab
     let tabHeadersHtml = `<div class="tab-headers">`;
     let panesHtml = `<div class="tab-content">`;
+    
     headers.forEach((header, idx) => {
         const activeClass = idx === 0 ? 'active' : '';
-        tabHeadersHtml += `<button class="tab-btn ${activeClass}" data-tab-idx="${idx}">${header}</button>`;
+        tabHeadersHtml += `<button class="tab-btn ${activeClass}" data-tab-idx="${idx}">${escapeHtml(header)}</button>`;
+        
         let paneContent = `<div class="tab-pane ${idx === 0 ? 'active-pane' : ''}" data-pane-idx="${idx}">`;
         rows.forEach(row => {
-            const val = row[idx] || '-';
-            paneContent += `<p>✨ ${val}</p>`;
+            const val = (idx < row.length) ? row[idx] : '-';
+            paneContent += `<p>✨ ${escapeHtml(val)}</p>`;
         });
         paneContent += `</div>`;
         panesHtml += paneContent;
     });
+    
     tabHeadersHtml += `</div>`;
     panesHtml += `</div>`;
     return `<div class="tab-widget">${tabHeadersHtml}${panesHtml}</div>`;
 }
 
+// Escape HTML untuk keamanan
+function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
 // Parser untuk #tab marker di dalam teks (format markdown tabel)
 function replaceTabMarkers(htmlContent) {
+    // Pola: #tab diikuti newline, lalu teks tabel sampai double newline atau akhir
     const regex = /#tab\s*\n([\s\S]*?)(?=\n\n|\n<\/div>|$)/g;
     return htmlContent.replace(regex, (match, tableBlock) => {
         return parseMarkdownTableToTabWidget(tableBlock);
@@ -75,28 +116,27 @@ function replaceTabMarkers(htmlContent) {
 function renderPendahuluan() {
     const data = mainData.pendahuluan;
     if (!data) return '<div class="content-card"><p>Konten tidak tersedia.</p></div>';
-    let html = `<div class="content-card"><h1>${data.judul}</h1>`;
+    let html = `<div class="content-card"><h1>${escapeHtml(data.judul)}</h1>`;
     for (const item of data.konten) {
         if (item.jenis === 'paragraf') {
-            html += `<p>${item.teks}</p>`;
+            html += `<p>${escapeHtml(item.teks)}</p>`;
         } else if (item.jenis === 'subjudul') {
-            html += `<h3>${item.teks}</h3>`;
+            html += `<h3>${escapeHtml(item.teks)}</h3>`;
         } else if (item.jenis === 'contoh') {
-            html += `<p><em>${item.teks}</em></p>`;
+            html += `<p><em>${escapeHtml(item.teks)}</em></p>`;
         } else if (item.jenis === 'tabel') {
-            // Buat widget tab dari tabel JSON
             const headers = item.header;
             const rows = item.baris;
-            if (headers && rows) {
+            if (headers && rows && headers.length > 0) {
                 let tabHeaders = `<div class="tab-headers">`;
                 let panes = `<div class="tab-content">`;
                 headers.forEach((h, idx) => {
                     const active = idx === 0 ? 'active' : '';
-                    tabHeaders += `<button class="tab-btn ${active}" data-tab-idx="${idx}">${h}</button>`;
+                    tabHeaders += `<button class="tab-btn ${active}" data-tab-idx="${idx}">${escapeHtml(h)}</button>`;
                     let paneContent = `<div class="tab-pane ${idx === 0 ? 'active-pane' : ''}" data-pane-idx="${idx}">`;
                     rows.forEach(row => {
                         const val = row[idx] || '-';
-                        paneContent += `<p>✨ ${val}</p>`;
+                        paneContent += `<p>✨ ${escapeHtml(val)}</p>`;
                     });
                     paneContent += `</div>`;
                     panes += paneContent;
@@ -105,7 +145,7 @@ function renderPendahuluan() {
                 panes += `</div>`;
                 html += `<div class="tab-widget">${tabHeaders}${panes}</div>`;
             } else {
-                html += `<p><strong>${item.judul || 'Tabel'}</strong> tidak dapat ditampilkan.</p>`;
+                html += `<p><strong>${escapeHtml(item.judul || 'Tabel')}</strong> tidak dapat ditampilkan.</p>`;
             }
         }
     }
@@ -116,31 +156,40 @@ function renderPendahuluan() {
 function renderBab(babId) {
     let text = babData[babId];
     if (!text) return '<div class="content-card"><p>Konten bab tidak tersedia.</p></div>';
-    // Konversi markdown sederhana (##, ###, paragraf)
+    
+    // Konversi markdown sederhana (## heading, ### subheading)
+    // Lakukan ini sebelum menangani #tab agar tidak mengganggu marker
     let processed = text
         .replace(/## (.*?)\n/g, '<h2>$1</h2>')
         .replace(/### (.*?)\n/g, '<h3>$1</h3>')
         .replace(/\n\n/g, '</p><p>')
         .replace(/\n/g, '<br>');
+    
+    // Bungkus dalam card
     let fullHtml = `<div class="content-card">${processed}</div>`;
-    // Ganti marker #tab
+    
+    // Ganti marker #tab menjadi widget tab interaktif
     fullHtml = replaceTabMarkers(fullHtml);
+    
+    // Pastikan paragraf yang tidak ditutup dengan baik tidak mengganggu
+    // (tidak perlu, karena sudah benar)
+    
     return fullHtml;
 }
 
 function renderKesimpulan() {
     const data = closingData.kesimpulan;
     if (!data) return '<div class="content-card"><p>Konten tidak tersedia.</p></div>';
-    let html = `<div class="content-card"><h1>✨ ${data.judul}</h1>`;
+    let html = `<div class="content-card"><h1>✨ ${escapeHtml(data.judul)}</h1>`;
     for (const item of data.konten) {
         if (item.jenis === 'paragraf') {
-            html += `<p>${item.teks}</p>`;
+            html += `<p>${escapeHtml(item.teks)}</p>`;
         } else if (item.jenis === 'kutipan') {
-            html += `<blockquote style="border-left:4px solid var(--accent); padding-left:1rem; margin:1rem 0;">${item.teks}</blockquote>`;
+            html += `<blockquote style="border-left:4px solid var(--accent); padding-left:1rem; margin:1rem 0;">${escapeHtml(item.teks)}</blockquote>`;
         }
     }
     if (data.pesan_penutup) {
-        html += `<p style="margin-top:2rem; font-weight:500;">${data.pesan_penutup}</p>`;
+        html += `<p style="margin-top:2rem; font-weight:500;">${escapeHtml(data.pesan_penutup)}</p>`;
     }
     html += `</div>`;
     return html;
@@ -170,6 +219,7 @@ function attachTabEvents(container) {
         const btns = widget.querySelectorAll('.tab-btn');
         const panes = widget.querySelectorAll('.tab-pane');
         btns.forEach(btn => {
+            // Hapus listener lama untuk menghindari duplikasi
             btn.removeEventListener('click', handleTabClick);
             btn.addEventListener('click', handleTabClick);
         });
@@ -286,7 +336,7 @@ function buildSidebar() {
     });
 }
 
-// Background canvas animation (sama seperti sebelumnya)
+// Background canvas animation
 const canvas = document.getElementById('bgCanvas');
 let ctx = canvas ? canvas.getContext('2d') : null;
 let bars = [];
@@ -329,7 +379,7 @@ function initApp() {
 
     // Render semua halaman terlebih dahulu (agar konten siap saat navigasi)
     chapters.forEach(ch => renderPage(ch.id));
-    renderPage('kesimpulan'); // sudah termasuk di chapters, tapi amankan
+    renderPage('kesimpulan');
 
     // Pastikan homePage aktif di awal
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -364,7 +414,6 @@ function initApp() {
         if (hash && document.getElementById(hash)) {
             navigateTo(hash, false);
         } else {
-            // kembali ke home
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const home = document.getElementById('homePage');
             if (home) home.classList.add('active');
@@ -373,7 +422,6 @@ function initApp() {
         }
     });
 
-    // Jika ada hash di awal
     if (window.location.hash) {
         let hash = window.location.hash.slice(1);
         if (document.getElementById(hash)) {
@@ -381,7 +429,6 @@ function initApp() {
         }
     }
 
-    // Canvas
     resizeCanvas();
     drawBars();
     window.addEventListener('resize', () => { resizeCanvas(); });
