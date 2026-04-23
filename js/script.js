@@ -156,24 +156,21 @@ function renderPendahuluan() {
 function renderBab(babId) {
     let text = babData[babId];
     if (!text) return '<div class="content-card"><p>Konten bab tidak tersedia.</p></div>';
-    
-    // Konversi markdown sederhana (## heading, ### subheading)
-    // Lakukan ini sebelum menangani #tab agar tidak mengganggu marker
+
+    // 1. Proses marker #tab di teks MENTAH (sebelum konversi newline)
+    const tabRegex = /^#tab\s*\n([\s\S]*?)(?=\n\n|$)/gm;
+    text = text.replace(tabRegex, (match, tableBlock) => {
+        return parseMarkdownTableToTabWidget(tableBlock);
+    });
+
+    // 2. Konversi markdown ke HTML
     let processed = text
         .replace(/## (.*?)\n/g, '<h2>$1</h2>')
         .replace(/### (.*?)\n/g, '<h3>$1</h3>')
         .replace(/\n\n/g, '</p><p>')
         .replace(/\n/g, '<br>');
-    
-    // Bungkus dalam card
+
     let fullHtml = `<div class="content-card">${processed}</div>`;
-    
-    // Ganti marker #tab menjadi widget tab interaktif
-    fullHtml = replaceTabMarkers(fullHtml);
-    
-    // Pastikan paragraf yang tidak ditutup dengan baik tidak mengganggu
-    // (tidak perlu, karena sudah benar)
-    
     return fullHtml;
 }
 
