@@ -2,60 +2,50 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Belajar Investasi | Rekonstruksi Paradigma Keuangan</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belajar Investasi - Paradigma Keuangan Baru</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- Background canvas untuk diagram batang bergerak -->
     <canvas id="bgCanvas" class="bg-canvas"></canvas>
 
-    <!-- Kontrol atas: theme toggle & menu -->
     <div class="top-controls">
-        <button class="icon-btn" id="themeToggle" aria-label="Tema Gelap/Terang">🌙</button>
-        <button class="icon-btn menu-btn" id="menuToggleBtn" style="display: none;">
+        <button id="themeToggle" class="icon-btn" title="Ganti tema">🌙</button>
+        <button id="menuToggleBtn" class="icon-btn menu-btn" style="display:none;" title="Menu">
             <div class="menu-icon-line">
                 <span></span><span></span><span></span>
             </div>
         </button>
     </div>
 
-    <!-- Sidebar daftar bab -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <span class="sidebar-title">Daftar Materi</span>
-        </div>
-        <nav>
-            <ul id="chapterSidebarList"></ul>
-        </nav>
-    </aside>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">📚 Daftar Isi</div>
+        <ul id="chapterSidebarList"></ul>
+    </nav>
 
-    <!-- App container utama -->
-    <main class="app-main" id="appMain">
-        <!-- Halaman Utama (Home) -->
+    <main class="app-main">
+        <!-- Halaman Home -->
         <section id="homePage" class="page active">
             <div class="hero-center">
-                <h1 class="breathing-title">Belajar Investasi</h1>
-                <p class="hero-sub">Rekonstruksi Paradigma Keuangan: Strategi Investasi, Manajemen Risiko, dan Akumulasi Kekayaan Berbasis Logika Intuitif</p>
-                <button class="btn-start" id="startBtn">Mulai Pelajari →</button>
+                <h1 class="breathing-title" id="mainTitle">Belajar Investasi</h1>
+                <p class="hero-sub" id="mainSubtitle"></p>
+                <button id="startBtn" class="btn-start">Mulai Pelajari</button>
             </div>
         </section>
 
-        <!-- Dynamic pages: pendahuluan, bab1 ... bab7, kesimpulan -->
-        <div id="pendahuluan" class="page"></div>
-        <div id="bab1" class="page"></div>
-        <div id="bab2" class="page"></div>
-        <div id="bab3" class="page"></div>
-        <div id="bab4" class="page"></div>
-        <div id="bab5" class="page"></div>
-        <div id="bab6" class="page"></div>
-        <div id="bab7" class="page"></div>
-        <div id="kesimpulan" class="page"></div>
+        <!-- Halaman konten akan dibuat otomatis & diberi ID sesuai chapters -->
+        <section id="pendahuluan" class="page"></section>
+        <section id="bab1" class="page"></section>
+        <section id="bab2" class="page"></section>
+        <section id="bab3" class="page"></section>
+        <section id="bab4" class="page"></section>
+        <section id="bab5" class="page"></section>
+        <section id="bab6" class="page"></section>
+        <section id="bab7" class="page"></section>
+        <section id="kesimpulan" class="page"></section>
     </main>
 
-    <script src="js/script.js"></script>
+    <script src="css/style.css"></script>
 </body>
             </html>
